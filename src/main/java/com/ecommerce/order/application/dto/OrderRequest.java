@@ -1,4 +1,10 @@
 package com.ecommerce.order.application.dto;
 
-public record OrderRequest(String productName, int quantity, double price) {
+import lombok.Builder;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+@Builder
+public record OrderRequest(Long costumerId, BigDecimal totalPrice, List<OrderItemRequest> items) {
 }

@@ -1,6 +1,7 @@
 package com.ecommerce.order.infrastructure.configuration;
 
-import com.ecommerce.order.domain.event.OrderEvent;
+import com.ecommerce.order.domain.event.OrderCreatedEvent;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,23 +20,17 @@ public class KafkaProducerConfig {
     @Value("${spring.kafka.boostrap-servers}")
     private String boostrapServers;
 
-    @Value("${spring.kafka.producer.key-serializer}")
-    private String keySerializer;
-
-    @Value("${spring.kafka.producer.value-serializer}")
-    private String valueSerializer;
-
     @Bean
-    public ProducerFactory<String, OrderEvent> producerFactory(){
+    public ProducerFactory<String, OrderCreatedEvent> producerFactory(){
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, boostrapServers);
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializer);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializer);
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
     @Bean
-    public KafkaTemplate<String, OrderEvent> kafkaTemplate() {
+    public KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 }
