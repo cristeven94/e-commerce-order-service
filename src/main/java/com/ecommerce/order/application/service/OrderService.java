@@ -31,21 +31,22 @@ public class OrderService {
         order.setStatus(OrderStatus.NEW);
         Order savedOrder = orderRepository.save(order);
         log.info("Order created -> {}", order);
-        kafkaTemplate.send("order-topic", buildOrderCreatedEvent(order));
+        kafkaTemplate.send("order-topic", "orderId-" + order.getId(), buildOrderCreatedEvent(order));
         return savedOrder;
     }
 
-    private OrderCreatedEvent buildOrderCreatedEvent(Order order){
-        return new OrderCreatedEvent(order.getId(), order.getCostumerId(), order.getTotalPrice(), order.getStatus());
+    private OrderCreatedEvent buildOrderCreatedEvent(Order order) {
+        return new OrderCreatedEvent(order.getId(), order.getCostumerId(), order.getOrderItems(),
+                order.getTotalPrice(), order.getStatus());
     }
 
-    private BigDecimal calculateTotal(List<OrderItem> itemList){
+    private BigDecimal calculateTotal(List<OrderItem> itemList) {
         return itemList.stream()
                 .map(orderItem -> orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public Order getOrderById(Long orderId){
+    public Order getOrderById(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException(orderId));
     }

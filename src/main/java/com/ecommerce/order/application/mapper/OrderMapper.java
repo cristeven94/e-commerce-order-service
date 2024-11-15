@@ -11,8 +11,11 @@ import java.util.Objects;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface OrderMapper {
+
     @Mapping(source = "items", target = "orderItems")
     Order toEntity(OrderRequest orderRequest);
+
+    @Mapping(source = "orderItems", target = "items")
     OrderResponse toDTO(Order order);
 
     @AfterMapping
