@@ -1,6 +1,7 @@
 package com.ecommerce.order.application.service;
 
 import com.ecommerce.order.domain.event.OrderCreatedEvent;
+import com.ecommerce.order.domain.exception.OrderNotFoundException;
 import com.ecommerce.order.domain.model.Order;
 import com.ecommerce.order.domain.model.OrderItem;
 import com.ecommerce.order.domain.model.OrderStatus;
@@ -15,12 +16,12 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
@@ -65,9 +66,8 @@ class OrderServiceTest {
 
     @Test
     void createOrderSuccessful() {
-
         when(orderRepository.save(any(Order.class))).thenReturn(order);
-        doNothing().when(kafkaTemplate.send(anyString(),any(OrderCreatedEvent.class)));
+        when(kafkaTemplate.send(anyString(),any(OrderCreatedEvent.class))).thenReturn(CompletableFuture.completedFuture(null));
 
         Order savedOrder = service.createOrder(order);
 
@@ -77,6 +77,29 @@ class OrderServiceTest {
         assertThat(savedOrder.getOrderItems())
                 .extracting(OrderItem::getPrice)
                 .containsExactly(BigDecimal.valueOf(200), BigDecimal.valueOf(100));
+
+        verify(orderRepository, atLeastOnce()).save(any());
+        verify(kafkaTemplate, atLeastOnce()).send(any(), any());
+    }
+
+    @Test
+    void findOrderByIdSuccessful(){
+        when(orderRepository.findById(anyLong())).thenReturn(Optional.of(order));
+
+        assertThatCode(() -> service.getOrderById(1L)).doesNotThrowAnyException();
+
+        verify(orderRepository, atLeastOnce()).findById(any());
+    }
+
+    @Test
+    void findOrderByIdShouldThrowException(){
+        when(orderRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.getOrderById(1L))
+                .isInstanceOf(OrderNotFoundException.class)
+                .hasMessage("Order with ID 1 not found");
+
+        verify(orderRepository, atLeastOnce()).findById(any());
     }
 
 }
