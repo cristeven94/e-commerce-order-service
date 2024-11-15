@@ -2,7 +2,9 @@ package com.ecommerce.order.domain.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,9 +33,10 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
-    @CreatedDate
+    @CreationTimestamp(source = SourceType.DB)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp(source = SourceType.DB)
     private LocalDateTime updatedAt;
 
 }

@@ -1,16 +1,16 @@
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
     id BIGINT PRIMARY KEY,
     costumer_id BIGINT,
-    total_price DECIMAL
+    total_price DECIMAL,
     status VARCHAR,
     created_at TIMESTAMP,
-    updated_at
-)
+    updated_at TIMESTAMP
+);
 
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
     id BIGINT PRIMARY KEY,
-    order_id BIGINT REFERENCES orders
-    product_id BIGINT
-    quantity INT
+    order_id BIGINT REFERENCES orders(id),
+    product_id BIGINT,
+    quantity INT,
     price DECIMAL
-)
+);

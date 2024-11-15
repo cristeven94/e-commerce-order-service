@@ -5,10 +5,5 @@ import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
 
-@AllArgsConstructor
-public class OrderCreatedEvent {
-    private Long orderId;
-    private Long costumerId;
-    private BigDecimal totalPrice;
-    private OrderStatus status;
+public record OrderCreatedEvent(Long orderId, Long costumerId, BigDecimal totalPrice, OrderStatus status) {
 }

@@ -5,7 +5,9 @@ import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
-public record OrderResponse(Long id, Long costumerId, BigDecimal totalPrice, OrderStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+public record OrderResponse(Long id, Long costumerId, BigDecimal totalPrice, OrderStatus status,
+                            List<OrderItemResponse> items, LocalDateTime createdAt, LocalDateTime updatedAt) {
 }
