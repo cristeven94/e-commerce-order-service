@@ -9,6 +9,7 @@ import com.ecommerce.order.infrastructure.repository.OrderRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -19,10 +20,12 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
+    private final InventoryService inventoryService;
 
-    public OrderService(OrderRepository orderRepository, KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate) {
+    public OrderService(OrderRepository orderRepository, KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate, InventoryService inventoryService) {
         this.orderRepository = orderRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.inventoryService = inventoryService;
     }
 
     public Order createOrder(Order order) {
