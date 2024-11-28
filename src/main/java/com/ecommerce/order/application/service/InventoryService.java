@@ -1,31 +1,37 @@
 package com.ecommerce.order.application.service;
 
+import com.ecommerce.order.domain.exception.EndpointInPropertiesNotFound;
 import com.ecommerce.order.domain.model.Inventory;
 import com.ecommerce.order.infrastructure.properties.InventoryServiceProperties;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.Objects;
 
 @Service
 @Log4j2
 public class InventoryService {
 
-    public static final String CHECK_INVENTORY = "check-inventory";
+    public static final String CHECK_INVENTORY_ENDPOINT = "check-inventory";
 
-    private final RestTemplate restTemplate;
+    private final WebClient inventoryClient;
     private final InventoryServiceProperties properties;
 
-    public InventoryService(RestTemplate restTemplate, InventoryServiceProperties properties) {
-        this.restTemplate = restTemplate;
+    public InventoryService(WebClient inventoryClient, InventoryServiceProperties properties) {
+        this.inventoryClient = inventoryClient;
         this.properties = properties;
     }
 
-    @CircuitBreaker(name = "inventoryService", fallbackMethod = "fallbackInventoryCheck")
-    public Inventory checkInventory(Long productId) {
-        String url = getInventoryCheckUrl(productId);
-        return restTemplate.getForObject(url, Inventory.class);
+    @CircuitBreaker(name = "inventoryServiceCircuitBreaker", fallbackMethod = "fallbackInventoryCheck")
+    public boolean checkInventory(Long productId) {
+        Inventory item = inventoryClient.get()
+                .uri(getEndpointUriFromProperties(CHECK_INVENTORY_ENDPOINT), productId)
+                .retrieve()
+                .bodyToMono(Inventory.class)
+                .block();
+        return Objects.nonNull(item) && item.isAvailable();
     }
 
     private boolean fallbackInventoryCheck(Long productId, Throwable throwable) {
@@ -33,11 +39,10 @@ public class InventoryService {
         return false;
     }
 
-    private String getInventoryCheckUrl(Long productId) {
-        return UriComponentsBuilder
-                .fromHttpUrl(properties.getRootUrl())
-                .path(properties.getEndpoints().get(CHECK_INVENTORY))
-                .buildAndExpand(productId)
-                .toUriString();
+    private String getEndpointUriFromProperties(String endpointName) {
+        return properties.getEndpointUri(endpointName)
+                .orElseThrow(() -> new EndpointInPropertiesNotFound(endpointName));
     }
+
+
 }
